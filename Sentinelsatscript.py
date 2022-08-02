@@ -12,7 +12,26 @@ paswrd = pyautogui.password(text="Password for user " + str(user) + ":", title='
 
 
 api = SentinelAPI(user, paswrd)
+def search(x,y,z,t,tiles):
+    query_kwargs = {
+        'cloudcoverpercentage': (float(x), float(y)),
+        # "cloudcoverpercentage":'5',
+        'platformname': 'Sentinel-2',
+        'producttype': 'S2MSI1C',
+        'date': (str(z), str(t))}
+
+    products = OrderedDict()
+    for tile in tiles:
+        kw = query_kwargs.copy()
+        kw['tileid'] = tile
+        pp = api.query(**kw)
+        products.update(pp)
+    return products
+
+
+
 tiles = []
+#https://eatlas.org.au/data/uuid/f7468d15-12be-4e3f-a246-b2882a324f59 find tiles from the map in the site
 #34SEJ
 
 print('How many  Tiles do you want to search for :')
@@ -50,22 +69,10 @@ q=input()
 print("Insert the end date that you want to search for product (insert date as YYYYMMDD")
 r=input()
 
-query_kwargs = {
-        'cloudcoverpercentage': (float(k),float(l)),
-        #"cloudcoverpercentage":'5',
-        'platformname': 'Sentinel-2',
-        'producttype': 'S2MSI1C',
-        'date': (str(q), str(r))}
-
-products = OrderedDict()
-for tile in tiles:
-    kw = query_kwargs.copy()
-    kw['tileid'] = tile
-    pp = api.query(**kw)
-    products.update(pp)
 
 
 
+products=search(k,l,q,r,tiles)
 print("numbers of product found "+str(len(products)))
 
 print(*[str(k) + ':' + str(v) for k, v in products.items()], sep='\n')
