@@ -28,7 +28,30 @@ def search(x,y,z,t,tiles):
         products.update(pp)
     return products
 
+def decide():
+    print("Do you want to download all the products \t Y/N")
+    dicision = input()
+    if dicision == 'y' or dicision == 'Y':
+        api.download_all(products)
+    elif dicision == 'n' or dicision == 'N':
+        print("Do you want to download one or only a specific amount of products\t Y/N")
+        decision = input()
+        if decision == 'y' or decision == 'Y':
+            print("How many products do you want to download")
+            prnum = input()
+            if prnum.isnumeric() != True:
+                print("Insert the NUMBER of products you want to download")
+                prnum = input()
+            for i in range(int(prnum)):
+                print("Please provide the code of the product \nEXAMPLE OF CODE : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx ")
+                code = str(input())
+                api.download(code)
+        elif decision == 'n' or decision == 'N':
+            # print(products)
 
+            print(*[str(k) + ':' + str(v) for k, v in products.items()], sep='\n')
+    else:
+        print("WRONG INPUT")
 
 tiles = []
 #https://eatlas.org.au/data/uuid/f7468d15-12be-4e3f-a246-b2882a324f59 find tiles from the map in the site
@@ -76,26 +99,4 @@ products=search(k,l,q,r,tiles)
 print("numbers of product found "+str(len(products)))
 
 print(*[str(k) + ':' + str(v) for k, v in products.items()], sep='\n')
-print("Do you want to download all the products \t Y/N")
-dicision = input()
-if dicision=='y' or dicision=='Y':
-    api.download_all(products)
-elif dicision=='n' or dicision=='N':
-    print("Do you want to download one or only a specific amount of products\t Y/N")
-    decision = input()
-    if decision== 'y' or decision == 'Y':
-        print("How many products do you want to download")
-        prnum=input()
-        if prnum.isnumeric() != True:
-            print("Insert the NUMBER of products you want to download")
-            prnum = input()
-        for i in range(int(prnum)):
-          print("Please provide the code of the product \nEXAMPLE OF CODE : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx ")
-          code=str(input())
-          api.download(code)
-    elif  decision=='n' or decision=='N':
-       # print(products)
-
-       print(*[str(k) + ':' + str(v) for k, v in products.items()], sep='\n')
-else:
-    print("WRONG INPUT")
+decide()
