@@ -1,18 +1,36 @@
 from collections import OrderedDict
-
+import colored as colored
+from functions import print_menu, tileinput, cloudpercentage, dateinput, optionsforoption2, multicloudpercentage, \
+    handlermultisearchoption1
 import pyautogui as pyautogui
 from past.builtins import raw_input
 from sentinelsat import SentinelAPI
 import getpass
+from time import sleep, perf_counter
+from threading import Thread
+
 print("Insert Credentials for Copernicus Open Access Hub ")
 user = raw_input("Username:")
 #print("Password for " + user + ":")
-paswrd = pyautogui.password(text="Password for user " + str(user) + ":", title='Password', default='', mask='*')
-
-
-
+paswrd = pyautogui.password(text="Password for user " + str(user) + ":", title='Login to Copernicus Open Access Hub ', default='', mask='*')
 api = SentinelAPI(user, paswrd)
+
 def search(x,y,z,t,tiles):
+    query_kwargs = {
+        'cloudcoverpercentage': (float(x), float(y)),
+        # "cloudcoverpercentage":'5',
+        'platformname': 'Sentinel-2',
+        'producttype': 'S2MSI1C',
+        'date': (str(z), str(t))}
+
+    products = dict()
+    for tile in tiles:
+        kw = query_kwargs.copy()
+        kw['tileid'] = tile
+        pp = api.query(**kw)
+        products.update(pp)
+    return products
+def multisearch(x,y,z,t,tiles):
     query_kwargs = {
         'cloudcoverpercentage': (float(x), float(y)),
         # "cloudcoverpercentage":'5',
@@ -26,8 +44,10 @@ def search(x,y,z,t,tiles):
         kw['tileid'] = tile
         pp = api.query(**kw)
         products.update(pp)
-    return products
-
+    print("\n Numbers of product found " + str(len(products))+ " in the period between "+str(z)+" and "+str(t)+" with cloud coverage percentage between "+str(x)+" and "+str(y) )
+   # print("for search variables :cloudcoverpercentage"+str(x)+"\t"+str(y)+"date"+str(z)+"\t"+str(t))
+    print(*['product code '+str(k) + '\t product details : ' + str(v) for k, v in products.items()], sep='\n')
+    print("\n")
 def decide():
     print("Do you want to download all the products \t Y/N")
     dicision = input()
@@ -51,52 +71,68 @@ def decide():
 
             print(*[str(k) + ':' + str(v) for k, v in products.items()], sep='\n')
     else:
-        print("WRONG INPUT")
+        print("ERROR : WRONG INPUT\nGoing back to the menu")
+        print_menu()
+print_menu()
 
-tiles = []
 #https://eatlas.org.au/data/uuid/f7468d15-12be-4e3f-a246-b2882a324f59 find tiles from the map in the site
 #34SEJ
+text = "Find some useful testing tiles here"
+target = "https://eatlas.org.au/data/uuid/f7468d15-12be-4e3f-a246-b2882a324f59"
+print(f"\u001b{target}\u001b\\{text}\u001b\u001b\\")
+try:
+            option = int(input('Enter your choice: '))
+except:
+            print('Wrong input. Please enter a number ...')
 
-print('How many  Tiles do you want to search for :')
-t = input()
-if t.isnumeric() != True:
-    print("Insert the NUMBER of tiles you want to search for :")
-    t = input()
-t=int(t)
-for i in range(t):
- print("Add  tile")
- y = input()
- tiles.append(str(y).upper())
- #print(tiles)
+        #Check what choice was entered and act accordingly
+if option == 1:
+    tiles = tileinput()
+    mincloudper, maxcloudper = cloudpercentage()
+    begindate, enddate = dateinput()
 
- #if input()=='y' or input()=='Y':
-    #print('Enter Tile:')
-    #y = input()
-   # tiles.append(str(y))
-print("The added tiles are :")
-print(tiles)
-
-print("What cloud percentage do you the product to have ")
-print("Least percentage :")
-k=input()
-print("Max percentage :")
-l=input()
-if k.isnumeric()!= True and l.isnumeric()!= True :
-  print("Insert the NUMBER of the LOWEST cloud percentage you want to search for :")
-  k = input()
-  print("Insert the NUMBER of the MAX cloud percentage you want to search for :")
-  l = input()
-
-print("Insert the begining date that you want to search for product (insert date as YYYYMMDD")
-q=input()
-print("Insert the end date that you want to search for product (insert date as YYYYMMDD")
-r=input()
+    products=search(mincloudper, maxcloudper, begindate, enddate,tiles)
+    print("numbers of product found " + str(len(products)))
+    print(*[str(k) + ':' + str(v) for k, v in products.items()], sep='\n')
+    decide()
+elif option == 2:
+    optionsforoption2()
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        mincp,maxcp,begindate,enddate,tiles,t=handlermultisearchoption1(option)
+        tlist=[]
+        for i in range(t):
+            t = Thread(target=multisearch(mincp[i],maxcp[i],begindate,enddate,tiles))
+            tlist.append(t)
+            t.start()
+        for t in tlist:
+            t.join()
 
 
 
 
-products=search(k,l,q,r,tiles)
-print("numbers of product found "+str(len(products)))
 
-print(*[str(k) + ':' + str(v) for k, v in products.items()], sep='\n')
-decide()
+        #mincloudper1, maxcloudper1 = cloudpercentage()
+       # print("Insert values for the first  search")
+        #mincloudper2, maxcloudper2 = cloudpercentage()
+
+    elif option == 2:
+        print('Handle option \'Option 2\'')
+    elif option == 3:
+        print('Handle option \'Option 3\'')
+    elif option == 4:
+        print('Redirecting back to main menu')
+        print_menu()
+    else:
+        print('Invalid option. Please enter a number between 1 and 4.')
+elif option == 4:
+            print('Thanks message before exiting')
+            exit()
+else:
+            print('Invalid option. Please enter a number between 1 and 4.')
+
+
+
