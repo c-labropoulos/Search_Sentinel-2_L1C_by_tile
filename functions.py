@@ -43,6 +43,9 @@ def tileinput():
     except:
         print('Wrong input. Please enter a number ...')
         t = int(input('Enter your choice: '))
+    if t <= 0:
+        raise Exception("Sorry, no numbers must be positive")
+        t = int(input('Enter your choice: '))
 
     for i in range(t):
         print("Add  tile")

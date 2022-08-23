@@ -5,9 +5,10 @@ from functions import print_menu, tileinput, cloudpercentage, dateinput, options
 import pyautogui as pyautogui
 from past.builtins import raw_input
 from sentinelsat import SentinelAPI
-
 from threading import Thread
 import queue
+import logging
+logging.basicConfig(format='%(message)s', level='INFO')
 #insert credentials to sign in Copernicus Open Access Hub
 print("Insert Credentials for Copernicus Open Access Hub ")
 user = raw_input("Username:")
@@ -42,7 +43,6 @@ def search(x,y,z,t,tiles):
         pp = api.query(**kw)
         products.update(pp)
     return products#returns a dictionary with the products and their details that were found based on the previous criteria
-
 @storeInQueue#store the return dict of the function in the queue so we can use it outside of the thread
 def multisearch(x,y,z,t,tiles):
     # x : minimum percentage of cloud coverage
@@ -70,6 +70,10 @@ def multisearch(x,y,z,t,tiles):
     return  products#returns a dictionary with the products and their details that were found based on the previous criteria
 #a function for the user to decide if the user wants to download all the products or a specific amount of them
 def decide():
+ if len(dict) == 0:
+        print("No products found \nGoing back to previous menu")
+        optionsforoption2()
+ else:
     print("Do you want to download all the products \t Y/N")
     dicision = input()
     if dicision == 'y' or dicision == 'Y':
@@ -86,7 +90,14 @@ def decide():
             for i in range(int(prnum)):
                 print("Please provide the code of the product \nEXAMPLE OF CODE : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx ")
                 code = str(input())
-                api.download(code)#download the product with a specific code
+                is_online = api.is_online( code)
+                if is_online:
+                    print(f'Product {code} is online. Starting download.')
+                    api.download( code)
+                else:
+                    print(f'Product {code} is not online.')
+                    api.trigger_offline_retrieval( code)
+                #api.download(code)#download the product with a specific code
         elif decision == 'n' or decision == 'N':
             print("Printing the products ....")
             print(*[str(k) + ':' + str(v) for k, v in products.items()], sep='\n')
@@ -95,6 +106,11 @@ def decide():
         print("ERROR : WRONG INPUT\nGoing back to the menu")
         print_menu()
 def multisearchdecide(dict):#a function for the user to decide if the user wants a specific amount of the products after a search with non standard variables
+ if len(dict)==0:
+     print("No products found \nGoing back to previous menu")
+     optionsforoption2()
+ else:
+
     print("Do you want to download any of the products \t Y/N")
     dicision = input()
     if dicision == 'n' or dicision == 'N':
@@ -112,7 +128,15 @@ def multisearchdecide(dict):#a function for the user to decide if the user wants
             for i in range(int(prnum)):
                 print("Please provide the code of the product \nEXAMPLE OF CODE : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx ")
                 code = str(input())
-                api.download(code)#download the product with a specific code
+                is_online = api.is_online( code)
+
+                if is_online:
+                    print(f'Product {code} is online. Starting download.')
+                    api.download( code)
+                else:
+                    print(f'Product {code} is not online.')
+                    api.trigger_offline_retrieval( code)
+               # api.download(code)#download the product with a specific code
     else:
         print("ERROR : WRONG INPUT\nGoing back to previous menu")
         optionsforoption2()
