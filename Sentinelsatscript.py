@@ -70,10 +70,6 @@ def multisearch(x,y,z,t,tiles):
     return  products#returns a dictionary with the products and their details that were found based on the previous criteria
 #a function for the user to decide if the user wants to download all the products or a specific amount of them
 def decide():
- if len(dict) == 0:
-        print("No products found \nGoing back to previous menu")
-        optionsforoption2()
- else:
     print("Do you want to download all the products \t Y/N")
     dicision = input()
     if dicision == 'y' or dicision == 'Y':
@@ -106,11 +102,6 @@ def decide():
         print("ERROR : WRONG INPUT\nGoing back to the menu")
         print_menu()
 def multisearchdecide(dict):#a function for the user to decide if the user wants a specific amount of the products after a search with non standard variables
- if len(dict)==0:
-     print("No products found \nGoing back to previous menu")
-     optionsforoption2()
- else:
-
     print("Do you want to download any of the products \t Y/N")
     dicision = input()
     if dicision == 'n' or dicision == 'N':
