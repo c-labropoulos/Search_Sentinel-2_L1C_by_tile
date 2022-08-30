@@ -1,13 +1,13 @@
 from collections import OrderedDict
-import colored as colored
 from functions import print_menu, tileinput, cloudpercentage, dateinput, optionsforoption2, multicloudpercentage, \
-    handlermultisearchoption1, handlermultisearchoption2, option1handler
+    handlermultisearchoption1, handlermultisearchoption2, option1handler, zipopener
 import pyautogui as pyautogui
 from past.builtins import raw_input
 from sentinelsat import SentinelAPI
 from threading import Thread
 import queue
 import logging
+from zipfile import ZipFile
 logging.basicConfig(format='%(message)s', level='INFO')
 #insert credentials to sign in Copernicus Open Access Hub
 print("Insert Credentials for Copernicus Open Access Hub ")
@@ -26,7 +26,7 @@ def storeInQueue(f):
 def search(x,y,z,t,tiles):
     #x : minimum percentage of cloud coverage
     #y: maximum percentage of cloud coverage
-    #z : begining date to search for the product
+    #z : beginning date to search for the product
     #t : end date to search for the product
     #tiles : the tiles on the "world map" that we are going to search
     query_kwargs = {
@@ -47,7 +47,7 @@ def search(x,y,z,t,tiles):
 def multisearch(x,y,z,t,tiles):
     # x : minimum percentage of cloud coverage
     # y: maximum percentage of cloud coverage
-    # z : begining date to search for the product
+    # z : beginning date to search for the product
     # t : end date to search for the product
     # tiles : the tiles on the "world map" that we are going to search
     query_kwargs = {
@@ -200,5 +200,5 @@ elif option == 3:
 else:
             print('Invalid option. Please enter a number between 1 and 4.')
             option = int(input('Enter your choice: '))
-
-
+print("file opening")
+zipopener()

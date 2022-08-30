@@ -1,3 +1,6 @@
+import zipfile
+from zipfile import ZipFile
+import os
 # print the main menu and get the user's option and keep it for later use
 def print_menu():
     menu_options = {
@@ -184,3 +187,17 @@ def option1handler():
     mincloudper, maxcloudper = cloudpercentage()
     begindate, enddate = dateinput()
     return mincloudper, maxcloudper, begindate, enddate, tiles
+
+def zipopener():
+    filename = input("Paste the name of the zip file ")
+    zip = zipfile.ZipFile(str(filename)).namelist()
+ #   print(type(zip))
+    z = zipfile.ZipFile(str(filename))
+    imglist=list()
+    for name in zip:
+        if "IMG_DATA" in name and not name.endswith('/'):
+         imglist.append(name)
+         print('%s' % (name))
+        else:
+            continue
+
