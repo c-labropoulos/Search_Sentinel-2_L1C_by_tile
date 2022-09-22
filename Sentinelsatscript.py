@@ -1,4 +1,7 @@
 from collections import OrderedDict
+
+from matplotlib import pyplot as plt, cm
+
 from functions import print_menu, tileinput, cloudpercentage, dateinput, optionsforoption2, multicloudpercentage, \
     handlermultisearchoption1, handlermultisearchoption2, option1handler, zipopener
 import pyautogui as pyautogui
@@ -7,11 +10,22 @@ from sentinelsat import SentinelAPI
 from threading import Thread
 import queue
 import logging
+import urllib3
+import maskpass  # importing maskpass library
+import  numpy as np
 from zipfile import ZipFile
+
+from preprocessfunctions import readxml, resampleandsubset
+
 logging.basicConfig(format='%(message)s', level='INFO')
 #insert credentials to sign in Copernicus Open Access Hub
 print("Insert Credentials for Copernicus Open Access Hub ")
 user = raw_input("Username:")
+
+
+# masking the password
+#paswrd = str(maskpass.askpass(prompt="Password:", mask="#"))
+#paswrd = getpass()
 #print("Password for " + user + ":")
 paswrd = pyautogui.password(text="Password for user " + str(user) + ":", title='Login to Copernicus Open Access Hub ', default='', mask='*')
 api = SentinelAPI(user, paswrd)
@@ -80,16 +94,17 @@ def decide():
         if decision == 'y' or decision == 'Y':
             print("How many products do you want to download")
             prnum = input()
-            if prnum.isnumeric() != True:
+            if prnum.isnumeric() != True  :
                 print("Insert the NUMBER of products you want to download")
                 prnum = input()
             for i in range(int(prnum)):
                 print("Please provide the code of the product \nEXAMPLE OF CODE : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx ")
                 code = str(input())
-                is_online = api.is_online( code)
+                product_info = api.get_product_odata(code)
+                is_online = product_info['Online']
                 if is_online:
                     print(f'Product {code} is online. Starting download.')
-                    api.download( code)
+                    api.download(code)
                 else:
                     print(f'Product {code} is not online.')
                     api.trigger_offline_retrieval( code)
@@ -98,9 +113,12 @@ def decide():
             print("Printing the products ....")
             print(*[str(k) + ':' + str(v) for k, v in products.items()], sep='\n')
             exit()
+        else:
+            print("WRONG INPUT,BE CAREFULL")
+            decide()
     else:
-        print("ERROR : WRONG INPUT\nGoing back to the menu")
-        print_menu()
+        print("ERROR : WRONG INPUT\n")
+        decide()
 def multisearchdecide(dict):#a function for the user to decide if the user wants a specific amount of the products after a search with non standard variables
     print("Do you want to download any of the products \t Y/N")
     dicision = input()
@@ -129,8 +147,8 @@ def multisearchdecide(dict):#a function for the user to decide if the user wants
                     api.trigger_offline_retrieval( code)
                # api.download(code)#download the product with a specific code
     else:
-        print("ERROR : WRONG INPUT\nGoing back to previous menu")
-        optionsforoption2()
+        print("ERROR : WRONG INPUT\n")
+        multisearchdecide()
 option=print_menu()
 #go to functions.py to see more details about the print_menu()
 #https://eatlas.org.au/data/uuid/f7468d15-12be-4e3f-a246-b2882a324f59 find tiles from the map in the site
@@ -171,6 +189,7 @@ elif option == 2:
         for i in range(len(prodict)):
             multisearchdecide(prodict[i])
             #run the multisearchdecide function based on each dictionary of producst stored in the nested dictionary
+       # print_menu()
     elif option == 2:
         mincp, maxcp, begindate, enddate, tiles, t=handlermultisearchoption2()##function to fill all the variables for this option
         tlist = []#an empty list that will be later used to store the threads used
@@ -191,14 +210,36 @@ elif option == 2:
 
     elif option == 3:
         print('Redirecting back to main menu')
-        print_menu()
+        thirdoptioout=print_menu()
     else:
         print('Invalid option. Please enter a number between 1 and 3.')
 elif option == 3:
+    xmlpath,zipname,product=readxml()
+    sub_product=resampleandsubset(product)
+    answer = input("Do yo to see the the preprocessed product Y/N : ")
+    while answer.lower().strip() not in ('y','n'):
+            answer = input("Do yo to see the the preprocessed product Y/N : ")
+
+    if answer.lower().strip() == 'n':
+        print("Going back to menu...")
+        new = print_menu()
+    elif answer.lower().strip() == 'y':
+        sub_b6 = sub_product.getBand('B6')
+        print("band read")
+        width = sub_b6.getRasterWidth()
+        height = sub_b6.getRasterHeight()
+        print("subset size : ", width, height)
+        sub_b6_data = np.zeros(width * height, dtype=np.float32)
+        sub_b6.readPixels(0, 0, width, height, sub_b6_data)
+        sub_b6_data.shape = height, width
+
+        plt.figure(1)
+        fig = plt.imshow(sub_b6_data, cmap=cm.gray)
+        fig.axes.get_xaxis().set_visible(False)
+        fig.axes.get_yaxis().set_visible(False)
+        plt.show()
+
+else :
             print('Exiting')
             exit()
-else:
-            print('Invalid option. Please enter a number between 1 and 4.')
-            option = int(input('Enter your choice: '))
-print("file opening")
-zipopener()
+
