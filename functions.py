@@ -1,13 +1,19 @@
 import zipfile
 from zipfile import ZipFile
 import os
+
+import pyautogui
+from sentinelsat import SentinelAPI
+
+
 # print the main menu and get the user's option and keep it for later use
 def print_menu():
     menu_options = {
         1: 'Search',
         2: 'Multi-search',
         3: 'Preprocess',
-        4: 'Exit' ,
+        4: 'NDVI',
+        5: 'Exit' ,
     }
     for key in menu_options.keys():
         print(key, '--', menu_options[key])
@@ -32,7 +38,7 @@ def optionsforoption2():
         print(key, '--', search_options[key])
     option = input('Enter your choice: ')
 
-    while option.isdigit() == False or  int(option)> 3 or int(option)<1 :
+    while   int(option)> 3 or int(option)<1 :
         option = input('Enter your choice: ')
     return int(option)
 
@@ -41,15 +47,19 @@ def tileinput():
     tilelist = []
     print('How many  Tiles do you want to search for :')
 
-    t = int(input('Enter your choice: '))
-
-    while t.isdigit() == False or  int(t)<=0 :
+    t = input('Enter your choice: ')
+    while  str(t).isnumeric() == False or int(t) < 1:
         t = input('Enter your choice: ')
-    for i in range(t):
+
+    for i in range(int(t)):
         print("Add  tile")
         y = input()
-        while len(y) <= 5 and y.isalnum():
+        if len(y) <= 5:
             tilelist.append(str(y).upper())
+        else:
+            print("Wrong input please insert a tile ")
+
+
     print("The added tiles are :")
     print(tilelist)
     return tilelist
@@ -57,13 +67,13 @@ def tileinput():
 def cloudpercentage():
     print("What cloud percentage do you the product to have ")
     print("Insert the NUMBER of the LOWEST cloud percentage you want to search for :")
-    k = float(input('Enter your choice: '))
-    while float(k) == False or int(k)== False or int(k) < 0:
+    k = input('Enter your choice: ')
+    while  str(k).isnumeric() == False or float(k) < 0 :
         print("Wrong input please insert a positive number")
         k = input('Enter your choice: ')
     print("Insert the NUMBER of the MAX cloud percentage you want to search for :")
-    l = float(input('Enter your choice: '))
-    while float(l) == False or int(l)== False or int(l) < 0:
+    l = input('Enter your choice: ')
+    while str(l).isnumeric() == False or float(l) < 0:
         print("Wrong input please insert a positive number")
         l = input('Enter your choice: ')
 
@@ -72,13 +82,13 @@ def cloudpercentage():
 def multicloudpercentage(mincloudlist, maxcloudlist):
     print("What cloud percentage do you want the product to have ")
     print("Insert the NUMBER of the LOWEST cloud percentage you want to search for :")
-    k = float(input('Enter your choice: '))
-    while float(k) == False or int(k) == False or int(k) < 0:
+    k = input('Enter your choice: ')
+    while str(k).isnumeric() == False or float(k) < 0:
         print("Wrong input please insert a positive number")
         k = input('Enter your choice: ')
     print("Insert the NUMBER of the MAX cloud percentage you want to search for :")
-    l = float(input('Enter your choice: '))
-    while float(l) == False or int(l) == False or int(l) < 0:
+    l = input('Enter your choice: ')
+    while str(l).isnumeric() == False or float(l) < 0:
         print("Wrong input please insert a positive number")
         l = input('Enter your choice: ')
     mincloudlist.append(k), maxcloudlist.append(l)
@@ -89,13 +99,13 @@ def multicloudpercentage(mincloudlist, maxcloudlist):
 def dateinput():
     print("Insert the begining date that you want to search for product (insert date as YYYYMMDD)")
     q = input()
-    while len(q) > 8:
+    while len(str(q).strip()) != 8:
         print(
-            "Wrong input please enter againa the begining date that you want to search for product (insert date as YYYYMMDD)")
+            "Wrong input please enter again the begining date that you want to search for product (insert date as YYYYMMDD)")
         q = input()
     print("Insert the end date that you want to search for product (insert date as YYYYMMDD)")
     r = input()
-    while len(r) > 8:
+    while len(str(r).strip()) != 8:
         print("Wrong input please enter againa the end date that you want to search for product (insert date as YYYYMMDD)")
         r = input()
     return q, r
@@ -113,17 +123,17 @@ def handlermultisearchoption1(chocie):
     begindate, enddate = dateinput()
     print("how many searches do you want to do ?")
 
-    option = int(input('Enter your choice: '))
-    while option.isnumeric()==False:
-        option = int(input('Enter your choice: '))
-    nmthreads = option  # store the number of threads that will be used later on
+    option = input('Enter your choice: ')
+    while str(option).isnumeric()==False:
+        option = input('Enter your choice: ')
+    nmthreads = int(option)  # store the number of threads that will be used later on
     # create list to store the cloud coverage percentages
     mincloud = list()
     maxcloud = list()
     if len(mincloud) == len(maxcloud):
         print("lists have been created and  are empty ")  # successful creation of the lists
 
-    for i in range(option):
+    for i in range(int(option)):
         print("Insert values for the " + str(i + 1) + "  search")
         multicloudpercentage(mincloud, maxcloud)#fill the lists of cloud percentages
     if len(mincloud) != len(maxcloud):
@@ -137,16 +147,16 @@ def handlermultisearchoption2():
     tiles = tileinput()
     mincloud, maxcloud = cloudpercentage()
     print("how many searches do you want to do ?")
-    option = int(input('Enter your choice: '))
-    while option.isnumeric() == False:
+    option = input('Enter your choice: ')
+    while str(option).isnumeric() == False:
         option = int(input('Enter your choice: '))
-    nmthreads = option
+    nmthreads = int(option)
     begindate = list()
     enddate = list()
     if len(begindate) == len(enddate):
         print("lists have been created and  are empty ")
 
-    for i in range(option):
+    for i in range(int(option)):
         print("Insert values for the " + str(i + 1) + "  search")
         mutlidate(begindate, enddate)
     if len(begindate) != len(enddate):
@@ -183,15 +193,19 @@ def filecreator():
     #preprocessedpath = "C:/Users/PC/PycharmProjects/comballthesent/IMG_DATA_preprocessed"
     path = "SentinelSnapIMG_DATA"
     preprocessedpath = "/IMG_DATA_preprocessed"
+
+
     # Check whether the specified path exists or not
     isExist = os.path.exists(path)
     preprocessedexist = os.path.exists(preprocessedpath)
+
 
     if not isExist:
         # Create a new directory because it does not exist
         os.makedirs(path)
     elif not preprocessedexist:
         os.makedirs(preprocessedpath)
+
     filename = input("Paste the name of the zip file from the sentinel product you want to preprocess ")
     with zipfile.ZipFile(str(filename), "r") as zip_ref:
         print("file opening")
@@ -206,3 +220,32 @@ def removezip(zipname):
     file_path=zipname+'.zip'
     if os.path.exists(file_path):
         os.remove(file_path)
+from past.builtins import raw_input
+def credentialssentinel():
+    user = raw_input("Username:")
+
+    # masking the password
+    # paswrd = str(maskpass.askpass(prompt="Password:", mask="#"))
+    # paswrd = getpass()
+    # print("Password for " + user + ":")
+    paswrd = pyautogui.password(text="Password for user " + str(user) + ":",
+                                title='Login to Copernicus Open Access Hub ', default='', mask='*')
+    api = SentinelAPI(user, paswrd)
+    return api
+def ndvifileread():
+    ndvimainfile = "IMG_DATA_NDVI"
+    ndviexist = os.path.exists(ndvimainfile)
+    if not ndviexist:
+     os.makedirs(ndvimainfile)
+
+    ndvifiletoread= input("Paste the name of the .tif preprocessedfile you want to apply ndvi ")
+    subproduct='IMG_DATA_preprocessed'+'/'+ndvifiletoread
+    while not os.path.exists(subproduct):
+      print("File does't exists")
+      ndvifiletoread = input("Paste the name of the .tif preprocessedfile you want to apply ndvi ")
+
+    else:
+     print("File exists")
+     print(subproduct)
+    # subproduct = 'IMG_DATA_preprocessed' + '/' + ndvifiletoread
+     return subproduct

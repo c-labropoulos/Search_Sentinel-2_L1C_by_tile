@@ -1,9 +1,10 @@
 from collections import OrderedDict
-
+import subprocess
 from matplotlib import pyplot as plt, cm
 
 from functions import print_menu, tileinput, cloudpercentage, dateinput, optionsforoption2, multicloudpercentage, \
-    handlermultisearchoption1, handlermultisearchoption2, option1handler, zipopener
+    handlermultisearchoption1, handlermultisearchoption2, option1handler, zipopener, credentialssentinel, removezip, \
+    ndvifileread
 import pyautogui as pyautogui
 from past.builtins import raw_input
 from sentinelsat import SentinelAPI
@@ -15,20 +16,9 @@ import maskpass  # importing maskpass library
 import  numpy as np
 from zipfile import ZipFile
 
-from preprocessfunctions import readxml, resampleandsubset
+from preprocessfunctions import readxml, resampleandsubset, showsub, savefile, ndviproduct
 
 logging.basicConfig(format='%(message)s', level='INFO')
-#insert credentials to sign in Copernicus Open Access Hub
-print("Insert Credentials for Copernicus Open Access Hub ")
-user = raw_input("Username:")
-
-
-# masking the password
-#paswrd = str(maskpass.askpass(prompt="Password:", mask="#"))
-#paswrd = getpass()
-#print("Password for " + user + ":")
-paswrd = pyautogui.password(text="Password for user " + str(user) + ":", title='Login to Copernicus Open Access Hub ', default='', mask='*')
-api = SentinelAPI(user, paswrd)
 
 my_queue = queue.Queue()
 #function to get products dictionary from each thread later on
@@ -126,18 +116,21 @@ def multisearchdecide(dict):#a function for the user to decide if the user wants
         print("These are the products")
         print(*[str(k) + ':' + str(v) for k, v in dict.items()], sep='\n')
         print("Going back to the main menu")
-        print_menu()
+        subprocess.call(['python', 'Sentinelsatscript.py'])
     elif dicision == 'y' or dicision == 'Y':
 
             print("How many products do you want to download")
             prnum = input()
+            i = 1
             if prnum.isnumeric() != True:
                 print("Insert the NUMBER of products you want to download")
                 prnum = input()
             for i in range(int(prnum)):
+
                 print("Please provide the code of the product \nEXAMPLE OF CODE : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx ")
                 code = str(input())
                 is_online = api.is_online( code)
+
 
                 if is_online:
                     print(f'Product {code} is online. Starting download.')
@@ -145,6 +138,11 @@ def multisearchdecide(dict):#a function for the user to decide if the user wants
                 else:
                     print(f'Product {code} is not online.')
                     api.trigger_offline_retrieval( code)
+                while i>1:
+                    print(
+                        "Please provide another  code of a product you want to downlaod \nEXAMPLE OF CODE : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx ")
+                    code = str(input())
+                    is_online = api.is_online(code)
                # api.download(code)#download the product with a specific code
     else:
         print("ERROR : WRONG INPUT\n")
@@ -157,6 +155,7 @@ option=print_menu()
 
 
 if option == 1:
+    api=credentialssentinel()
     text = "Find some useful testing tiles here"
     target = "https://eatlas.org.au/data/uuid/f7468d15-12be-4e3f-a246-b2882a324f59"
     print(f"\n\u001b{target}\u001b\\{text}\u001b\u001b\\")
@@ -164,7 +163,9 @@ if option == 1:
     products=search(mincloudper, maxcloudper, begindate, enddate,tiles)#search and store in dict the producst that fulfill the search filters
     print(*['product code '+str(k) + '\t product details : ' + str(v) for k, v in products.items()], sep='\n')
     decide()
+
 elif option == 2:
+    api = credentialssentinel()
     text = "Find some useful testing tiles here"
     target = "https://eatlas.org.au/data/uuid/f7468d15-12be-4e3f-a246-b2882a324f59"
     print(f"\n\u001b{target}\u001b\\{text}\u001b\u001b\\\n")
@@ -210,19 +211,20 @@ elif option == 2:
 
     elif option == 3:
         print('Redirecting back to main menu')
-        thirdoptioout=print_menu()
+        subprocess.call(['python', 'Sentinelsatscript.py'])
     else:
         print('Invalid option. Please enter a number between 1 and 3.')
 elif option == 3:
     xmlpath,zipname,product=readxml()
     sub_product=resampleandsubset(product)
+    savefile(sub_product,zipname)
     answer = input("Do yo to see the the preprocessed product Y/N : ")
-    while answer.lower().strip() not in ('y','n'):
-            answer = input("Do yo to see the the preprocessed product Y/N : ")
+    while answer.lower().strip() not in ('y', 'n'):
+        answer = input("Do yo to see the the preprocessed product Y/N : ")
 
     if answer.lower().strip() == 'n':
-        print("Going back to menu...")
-        new = print_menu()
+        print("Going back to main menu")
+        subprocess.call(['python', 'Sentinelsatscript.py'])
     elif answer.lower().strip() == 'y':
         sub_b6 = sub_product.getBand('B6')
         print("band read")
@@ -238,8 +240,12 @@ elif option == 3:
         fig.axes.get_xaxis().set_visible(False)
         fig.axes.get_yaxis().set_visible(False)
         plt.show()
+        print("Going back to main menu")
+        subprocess.call(['python', 'Sentinelsatscript.py'])
+elif option == 4:
+    product=ndvifileread()
+    ndviproduct(product)
 
 else :
-            print('Exiting')
-            exit()
-
+   print('Exiting')
+   exit()
